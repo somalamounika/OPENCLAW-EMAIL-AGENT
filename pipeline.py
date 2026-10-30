@@ -2857,7 +2857,8 @@ def fetch_attachments_via_gog(gmail_message_id, account):
         saved_paths = []
         saved_names = []
         for attachment_id, filename in attachment_refs:
-            out_path = ATTACHMENTS_DIR / f"{prefix}_{os.path.basename(filename)}"
+            safe_name = os.path.basename(filename) if filename else f"attachment_{attachment_id}.bin"
+            out_path = ATTACHMENTS_DIR / f"{prefix}_{safe_name}"
             dl = subprocess.run(
                 [
                     "gog",
@@ -3129,6 +3130,7 @@ def notify_dashboard(
     attachment_names=None,
     routing_analysis=None,
     dispatches=None,
+    body=None,
 ):
     flag_path = dashboard_notify_flag_path(dispatch_id)
     try:
@@ -3157,33 +3159,38 @@ def notify_dashboard(
             f"\n- {route.get('dispatch_id')}: {route.get('category')} → {route.get('recipient')} "
             f"({route_attachments})"
         )
+    clean_body = (body or "").strip()
+    body_display = f"\nContent: {clean_body[:300]}..." if clean_body else ""
+    safe_subject = (subject or "").replace("\r", "").replace("\n", " ").strip()
+    safe_sender = (sender or "").replace("\r", "").replace("\n", " ").strip()
+
     notify = (
-        "[EMAIL TRIAGED - DELEGATED TO SPECIALISTS]\n"
-        f"Dispatch ID: {dispatch_id}\n"
-        f"Categories: {category_line}\n"
-        f"Recipients: {recipient_line}\n"
-        f"Subject: {subject}\n"
-        f"From: {sender}"
-        f"{attachment_note}"
-        f"{dispatch_lines}"
-        f"{score_lines}\n"
-        f"Processed at: {utc_now()}\n"
-        "This is informational only. Do not ask for approval or resend."
+        f"**[EMAIL AUTO-DISPATCHED]**\n"
+        f"- **ID:** `{dispatch_id}`\n"
+        f"- **Subject:** {safe_subject}\n"
+        f"- **From:** {safe_sender}\n"
+        f"- **Categories:** {category_line}\n"
+        f"- **Recipients:** {recipient_line}"
+        f"{attachment_note}\n"
+        f"{dispatch_lines}\n"
+        f"- **Processed:** {utc_now()}\n"
+        "*(Informational only - triage logged)*"
     )
-    subprocess.Popen(
-        [
-            "openclaw",
-            "agent",
-            "--agent",
-            "main",
-            "--session-key",
-            "agent:main:main",
-            "--message",
-            notify,
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    for session_key in ["explicit:email-inbox-triage", "agent:main:main"]:
+        subprocess.Popen(
+            [
+                "openclaw",
+                "agent",
+                "--agent",
+                "main",
+                "--session-key",
+                session_key,
+                "--message",
+                notify,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     return True
 
 
@@ -3344,7 +3351,7 @@ def dispatch_routes_directly(route_payloads):
 
 
 def dispatch_webhook_message(msg, attachment_override=None):
-    raw_message_id = msg.get("id") or msg.get("messageId")
+    raw_message_id = msg.get("id") or msg.get("messageId") or (msg.get("message") or {}).get("id")
     message_id = sanitize_id(raw_message_id)
 
     with message_ingest_lock(message_id) as lock_handle:
@@ -3558,6 +3565,7 @@ def _dispatch_webhook_message_locked(
         attachment_names,
         routing_analysis,
         dispatches=delegation_routes,
+        body=master_payload.get("body_snippet") or master_payload.get("body") or "",
     ):
         delegation_plan["dashboard_notified_at"] = utc_now()
         save_json(DISPATCH_QUEUE / f"{base_dispatch_id}.delegation.json", delegation_plan)

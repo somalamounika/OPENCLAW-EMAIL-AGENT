@@ -1,13 +1,13 @@
 {
   "fallback": {
     "category": "General / Other",
-    "recipient": "i-anshika.guleria@affine.ai",
+    "recipient": "foranshika2@gmail.com",
     "subject_prefix": "[General Inquiry]"
   },
   "rules": [
     {
       "category": "Standards & Regulations",
-      "recipient": "satyamr814@gmail.com",
+      "recipient": "i-mounika.s@affine.ai",
       "subject_prefix": "[Standards & Regulations]",
       "keywords": [
         "standards",
@@ -27,7 +27,7 @@
     },
     {
       "category": "Certification",
-      "recipient": "doffysan001@gmail.com",
+      "recipient": "i-anshika.guleria@affine.ai",
       "subject_prefix": "[Certification]",
       "keywords": [
         "certification",
@@ -45,7 +45,7 @@
     },
     {
       "category": "Testing & Laboratory",
-      "recipient": "i-satyam.raj@affine.ai",
+      "recipient": "mounica.somala@gmail.com",
       "subject_prefix": "[Testing & Laboratory]",
       "keywords": [
         "test request",
@@ -65,7 +65,7 @@
     },
     {
       "category": "Product & Technical Support",
-      "recipient": "i-mounika.s@affine.ai",
+      "recipient": "s.mounika4026@gmail.com",
       "subject_prefix": "[Product & Technical Support]",
       "keywords": [
         "product requirement",
@@ -83,7 +83,7 @@
     },
     {
       "category": "General / Other",
-      "recipient": "i-anshika.guleria@affine.ai",
+      "recipient": "foranshika2@gmail.com",
       "subject_prefix": "[General Inquiry]",
       "keywords": [
         "pricing",
